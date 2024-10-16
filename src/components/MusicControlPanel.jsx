@@ -76,7 +76,6 @@ export default function MusicControlPanel() {
         onEnded={handleEnded}
       />
       <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-        {/* Joriy trek ma'lumotlari */}
         <div className="flex items-center space-x-4">
           {currentTrack && (
             <>
@@ -89,7 +88,6 @@ export default function MusicControlPanel() {
           )}
         </div>
 
-        {/* Asosiy boshqaruv tugmalari */}
         <div className="flex flex-col items-center space-y-2">
           <div className="flex items-center space-x-4">
             <button onClick={handleShuffleToggle} className={`hover:text-white ${shuffle ? 'text-[#1ed760]' : 'text-gray-400'}`}>
@@ -113,7 +111,6 @@ export default function MusicControlPanel() {
           </div>
         </div>
 
-        {/* Ovoz balandligi boshqaruvi */}
         <div className="flex items-center space-x-2">
           <Volume2 size={20} />
           <input
