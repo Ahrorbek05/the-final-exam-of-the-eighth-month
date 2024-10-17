@@ -15,7 +15,8 @@ import {
   setIsPlaying,
   toggleLike,
   fetchFeaturedPlaylists,
-  toggleLikeAlbum
+  toggleLikeAlbum,
+  fetchPlaylist
 } from '../features/spotifySlice';
 import MusicControlPanel from '../components/MusicControlPanel';
 
@@ -152,7 +153,7 @@ const PlaylistSection = ({ title, playlists }) => (
 const PlaylistCard = ({ playlist }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, likedAlbums } = useSelector((state) => state.spotify);
+  const { currentTrack, isPlaying, likedAlbums, accessToken } = useSelector((state) => state.spotify);
 
   const handlePlayPause = (e) => {
     e.stopPropagation();
@@ -170,7 +171,7 @@ const PlaylistCard = ({ playlist }) => {
   };
 
   const handleClick = () => {
-    dispatch(setCurrentPlaylist(playlist));
+    dispatch(fetchPlaylist({ accessToken, id: playlist.id }));
     navigate(`/playlist/${playlist?.id}`);
   };
 

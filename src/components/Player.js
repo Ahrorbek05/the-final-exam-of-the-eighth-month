@@ -13,7 +13,7 @@ const Player = () => {
     }
   }, [dispatch]);
 
-  useEffect(() => {
+  useEffect(() => { 
     if (audioPlayer && currentTrack) {
       audioPlayer.src = currentTrack.preview_url;
       if (isPlaying) {

@@ -252,6 +252,9 @@ const spotifySlice = createSlice({
     setPlaylist: (state, action) => {
       state.playlist = action.payload;
     },
+    resetCurrentPlaylist: (state) => {
+      state.currentPlaylist = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -340,6 +343,7 @@ export const {
   toggleRepeat,
   toggleShuffle,
   setPlaylist,
+  resetCurrentPlaylist,
 } = spotifySlice.actions;
 
 export default spotifySlice.reducer;

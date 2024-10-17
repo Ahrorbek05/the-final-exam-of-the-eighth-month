@@ -11,10 +11,10 @@ export default function PlaylistView() {
   const { currentPlaylist, likedSongs, accessToken, currentTrack, isPlaying } = useSelector((state) => state.spotify);
 
   useEffect(() => {
-    if (accessToken && id) {
+    if (accessToken && id && (!currentPlaylist || currentPlaylist.id !== id)) {
       dispatch(fetchPlaylist({ accessToken, id }));
     }
-  }, [accessToken, id, dispatch]);
+  }, [accessToken, id, dispatch, currentPlaylist]);
 
   useEffect(() => {
     if (currentPlaylist && currentPlaylist.tracks) {
@@ -39,6 +39,7 @@ export default function PlaylistView() {
 
   const tracks = currentPlaylist.tracks.items || [];
   const totalDuration = tracks.reduce((acc, item) => acc + (item.track?.duration_ms || 0), 0);
+  console.log(currentPlaylist.tracks);
 
   return (
     <div className="bg-gradient-to-b from-[#535353] to-[#121212] min-h-screen text-white p-8 pb-24">
