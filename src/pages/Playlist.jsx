@@ -1,20 +1,34 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
-import { Play, Pause, Heart, Clock, MoreHorizontal } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Play, Pause, Heart, Clock, MoreHorizontal, Loader2 } from 'lucide-react';
 import { fetchPlaylist, setCurrentTrack, setIsPlaying, toggleLike, setPlaylist } from '../features/spotifySlice';
 import MusicControlPanel from '../components/MusicControlPanel';
 
 export default function PlaylistView() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { currentPlaylist, likedSongs, accessToken, currentTrack, isPlaying } = useSelector((state) => state.spotify);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (accessToken && id && (!currentPlaylist || currentPlaylist.id !== id)) {
-      dispatch(fetchPlaylist({ accessToken, id }));
+      setIsLoading(true);
+      dispatch(fetchPlaylist({ accessToken, id }))
+        .then(() => setIsLoading(false))
+        .catch(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
   }, [accessToken, id, dispatch, currentPlaylist]);
+
+  useEffect(() => {
+    return () => {
+      dispatch({ type: 'RESET_CURRENT_PLAYLIST' });
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     if (currentPlaylist && currentPlaylist.tracks) {
@@ -35,7 +49,17 @@ export default function PlaylistView() {
     dispatch(toggleLike(song));
   };
 
-  if (!currentPlaylist || !currentPlaylist.tracks) return <div>Yuklanmoqda...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#121212]">
+        <Loader2 className="w-12 h-12 text-[#1ed760] animate-spin" />
+      </div>
+    );
+  }
+
+  if (!currentPlaylist || !currentPlaylist.tracks) {
+    return <div className="text-white text-center p-8">Playlistni yuklashda xatolik yuz berdi.</div>;
+  }
 
   const tracks = currentPlaylist.tracks.items || [];
   const totalDuration = tracks.reduce((acc, item) => acc + (item.track?.duration_ms || 0), 0);

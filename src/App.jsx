@@ -12,16 +12,13 @@ const App = () => {
         <aside className="w-64">
           <Sidebar />
         </aside>
-
         <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<SpotifyHomeClone />} />
             <Route path="/playlist/:id" element={<PlaylistPage />} />
             <Route path="/likes" element={<LikedSongs />} />
-
           </Routes>
         </main>
-
         <aside className="w-72 bg-gray-900">
           <FriendActivity />
         </aside>

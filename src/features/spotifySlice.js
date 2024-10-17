@@ -113,6 +113,11 @@ export const fetchFeaturedPlaylists = createAsyncThunk('spotify/fetchFeaturedPla
   return response.data.playlists.items;
 });
 
+const loadLikedSongsFromStorage = () => {
+  const storedLikedSongs = localStorage.getItem('likedSongs');
+  return storedLikedSongs ? JSON.parse(storedLikedSongs) : [];
+};
+
 const initialState = {
   chillMix: [],
   popMix: [],
@@ -127,7 +132,7 @@ const initialState = {
   currentPlaylist: null,
   currentTrack: null,
   isPlaying: false,
-  likedSongs: [],
+  likedSongs: loadLikedSongsFromStorage(),
   featuredPlaylists: [],
   audioPlayer: null,
   likedAlbums: [],
@@ -156,8 +161,16 @@ export const toggleLike = createAsyncThunk(
   'spotify/toggleLike',
   async (song, { getState }) => {
     const { likedSongs } = getState().spotify;
+
     const isLiked = likedSongs.some(s => s.id === song.id);
-    return isLiked ? likedSongs.filter(s => s.id !== song.id) : [...likedSongs, song];
+    const updatedLikedSongs = isLiked 
+      ? likedSongs.filter(s => s.id !== song.id) 
+      : [...likedSongs, song];
+
+    // Save to localStorage
+    localStorage.setItem('likedSongs', JSON.stringify(updatedLikedSongs));
+
+    return updatedLikedSongs;
   }
 );
 

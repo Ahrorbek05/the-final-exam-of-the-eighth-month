@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronLeft, ChevronRight, Bell, User, Play, Pause, Heart } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Bell, User, Play, Pause, Heart, Loader } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   fetchAccessToken, 
   fetchChillMix, 
@@ -20,8 +20,23 @@ import {
 } from '../features/spotifySlice';
 import MusicControlPanel from '../components/MusicControlPanel';
 
+const MusicLoader = () => (
+  <div className="flex items-center justify-center h-screen bg-black">
+    <div className="flex space-x-2">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="w-3 h-8 bg-green-500 rounded-full animate-pulse"
+          style={{ animationDelay: `${i * 0.15}s` }}
+        ></div>
+      ))}
+    </div>
+  </div>
+);
+
 const HomePage = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { 
     accessToken, 
     chillMix, 
@@ -45,15 +60,20 @@ const HomePage = () => {
 
   useEffect(() => {
     if (accessToken) {
-      dispatch(fetchChillMix(accessToken));
-      dispatch(fetchPopMix(accessToken));
-      dispatch(fetchIndieMix(accessToken));
-      dispatch(fetchDailyMix(accessToken));
-      dispatch(fetchDailyMix2(accessToken));
-      dispatch(fetchRockMix(accessToken));
-      dispatch(fetchFeaturedPlaylists(accessToken));
+      const fetchData = async () => {
+        await Promise.all([
+          dispatch(fetchChillMix(accessToken)),
+          dispatch(fetchPopMix(accessToken)),
+          dispatch(fetchIndieMix(accessToken)),
+          dispatch(fetchDailyMix(accessToken)),
+          dispatch(fetchDailyMix2(accessToken)),
+          dispatch(fetchRockMix(accessToken)),
+          dispatch(fetchFeaturedPlaylists(accessToken))
+        ]);
+      };
+      fetchData();
     }
-  }, [accessToken, dispatch]);
+  }, [accessToken, dispatch, location.key]);
 
   useEffect(() => {
     if (isPlaying && currentTrack) {
@@ -63,7 +83,7 @@ const HomePage = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <MusicLoader />;
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -198,7 +218,7 @@ const PlaylistCard = ({ playlist }) => {
         onClick={handleLike}
         className="mt-2 text-gray-400 hover:text-white"
       >
-        <Heart fill={isLiked ? "red" : "none"} stroke={isLiked ? "red" : "currentColor"} size={20} />
+        <Heart fill={isLiked ? "#1ed760" : "none"} stroke={isLiked ? "#1ed760" : "currentColor"} size={20} />
       </button>
     </div>
   );
