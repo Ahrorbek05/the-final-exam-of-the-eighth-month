@@ -145,10 +145,19 @@ const TopBar = () => (
 const MixCard = ({ title, playlist }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { accessToken } = useSelector((state) => state.spotify);
 
   const handleClick = () => {
-    dispatch(setCurrentPlaylist(playlist));
-    navigate(`/playlist/${playlist?.id}`);
+    if (playlist?.id) {
+      dispatch(fetchPlaylist({ accessToken, id: playlist.id }))
+        .unwrap()
+        .then(() => {
+          navigate(`/playlist/${playlist.id}`);
+        })
+        .catch((error) => {
+          console.error('Playlist yuklashda xatolik:', error);
+        });
+    }
   };
 
   return (

@@ -2,31 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Pause, Heart, Clock, MoreHorizontal, Loader2 } from 'lucide-react';
-import { fetchPlaylist, setCurrentTrack, setIsPlaying, toggleLike, setPlaylist } from '../features/spotifySlice';
+import { fetchPlaylist, setCurrentTrack, setIsPlaying, toggleLike, setPlaylist, resetCurrentPlaylist } from '../features/spotifySlice';
 import MusicControlPanel from '../components/MusicControlPanel';
 
 export default function PlaylistView() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { currentPlaylist, likedSongs, accessToken, currentTrack, isPlaying } = useSelector((state) => state.spotify);
-
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentPlaylist, likedSongs, accessToken, currentTrack, isPlaying, loading, error } = useSelector((state) => state.spotify);
 
   useEffect(() => {
-    if (accessToken && id && (!currentPlaylist || currentPlaylist.id !== id)) {
-      setIsLoading(true);
-      dispatch(fetchPlaylist({ accessToken, id }))
-        .then(() => setIsLoading(false))
-        .catch(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
+    if (accessToken && id) {
+      dispatch(fetchPlaylist({ accessToken, id }));
     }
-  }, [accessToken, id, dispatch, currentPlaylist]);
+  }, [accessToken, id, dispatch]);
 
   useEffect(() => {
     return () => {
-      dispatch({ type: 'RESET_CURRENT_PLAYLIST' });
+      dispatch(resetCurrentPlaylist());
     };
   }, [dispatch]);
 
@@ -36,20 +29,7 @@ export default function PlaylistView() {
     }
   }, [currentPlaylist, dispatch]);
 
-  const handlePlayPause = (track) => {
-    if (currentTrack?.id === track.id) {
-      dispatch(setIsPlaying(!isPlaying));
-    } else {
-      dispatch(setCurrentTrack(track));
-      dispatch(setIsPlaying(true));
-    }
-  };
-
-  const handleLike = (song) => {
-    dispatch(toggleLike(song));
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#121212]">
         <Loader2 className="w-12 h-12 text-[#1ed760] animate-spin" />
@@ -57,8 +37,12 @@ export default function PlaylistView() {
     );
   }
 
+  if (error) {
+    return <div className="text-white text-center p-8">Xatolik: {error}</div>;
+  }
+
   if (!currentPlaylist || !currentPlaylist.tracks) {
-    return <div className="text-white text-center p-8">Playlistni yuklashda xatolik yuz berdi.</div>;
+    return <div className="text-white text-center p-8">Playlist topilmadi.</div>;
   }
 
   const tracks = currentPlaylist.tracks.items || [];

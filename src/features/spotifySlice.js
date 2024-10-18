@@ -86,16 +86,14 @@ export const fetchPlaylist = createAsyncThunk(
   'spotify/fetchPlaylist',
   async ({ accessToken, id }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`https://api.spotify.com/v1/playlists/${id}`, {
+      const response = await axios.get(`https://api.spotify.com/v1/playlists/${id}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      if (!response.ok) throw new Error('Playlist olishda xatolik yuz berdi');
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.error?.message || 'Playlist olishda xatolik yuz berdi');
     }
   }
 );
@@ -284,14 +282,15 @@ const spotifySlice = createSlice({
       })
       .addCase(fetchPlaylist.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchPlaylist.fulfilled, (state, action) => {
         state.currentPlaylist = action.payload;
-        state.status = 'succeeded';
+        state.loading = false;
       })
       .addCase(fetchPlaylist.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload;
       })
       .addCase(fetchChillMix.pending, (state) => {
         state.loading = true;

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Home, Search, Library, PlusSquare, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAccessToken, fetchChillMix, fetchPopMix, fetchIndieMix, fetchDailyMix, fetchDailyMix2, fetchRockMix } from '../features/spotifySlice';
+import { fetchAccessToken, fetchChillMix, fetchPopMix, fetchIndieMix, fetchDailyMix, fetchDailyMix2, fetchRockMix, fetchPlaylist } from '../features/spotifySlice';
 
 const Sidebar = () => {
   const dispatch = useDispatch();
@@ -27,7 +27,14 @@ const Sidebar = () => {
   };
 
   const handlePlaylistClick = (playlist) => {
-    navigate(`/playlist/${playlist.id}`);
+    dispatch(fetchPlaylist({ accessToken, id: playlist.id }))
+      .unwrap()
+      .then(() => {
+        navigate(`/playlist/${playlist.id}`);
+      })
+      .catch((error) => {
+        console.error('Playlist yuklashda xatolik:', error);
+      });
   };
 
 
