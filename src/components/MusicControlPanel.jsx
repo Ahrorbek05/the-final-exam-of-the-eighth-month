@@ -1,22 +1,33 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Volume2 } from 'lucide-react';
-import { setIsPlaying, setCurrentTrack, toggleShuffle, toggleRepeat, setVolume, setProgress } from '../features/spotifySlice';
+import { setIsPlaying, playNextTrack, playPreviousTrack, setProgress } from '../features/spotifySlice';
+import { SkipBack, SkipForward, Play, Pause, Volume2, Volume1, VolumeX } from 'lucide-react';
+// import { Slider } from "@/components/ui/slider";
 
-export default function MusicControlPanel() {
+const MusicControlPanel = () => {
   const dispatch = useDispatch();
+  const { currentTrack, isPlaying, audioSrc } = useSelector((state) => state.spotify);
   const audioRef = useRef(null);
-  const { currentTrack, isPlaying, shuffle, repeat, volume, progress, playlist } = useSelector((state) => state.spotify);
+  const [volume, setVolume] = React.useState(50);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (currentTrack && currentTrack.preview_url) {
+      audioRef.current.src = currentTrack.preview_url;
       if (isPlaying) {
         audioRef.current.play();
-      } else {
-        audioRef.current.pause();
       }
     }
-  }, [isPlaying, currentTrack]);
+  }, [currentTrack, isPlaying]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      audioRef.current.play();
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -28,101 +39,123 @@ export default function MusicControlPanel() {
     dispatch(setIsPlaying(!isPlaying));
   };
 
-  const handlePrevTrack = () => {
-    const currentIndex = playlist.findIndex(track => track.id === currentTrack.id);
-    const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-    dispatch(setCurrentTrack(playlist[prevIndex]));
-  };
-
   const handleNextTrack = () => {
-    const currentIndex = playlist.findIndex(track => track.id === currentTrack.id);
-    const nextIndex = (currentIndex + 1) % playlist.length;
-    dispatch(setCurrentTrack(playlist[nextIndex]));
+    dispatch(playNextTrack());
   };
 
-  const handleShuffleToggle = () => {
-    dispatch(toggleShuffle());
-  };
-
-  const handleRepeatToggle = () => {
-    dispatch(toggleRepeat());
-  };
-
-  const handleVolumeChange = (e) => {
-    dispatch(setVolume(Number(e.target.value)));
+  const handlePreviousTrack = () => {
+    dispatch(playPreviousTrack());
   };
 
   const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-      dispatch(setProgress(progress));
-    }
+    const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+    setCurrentTime(audioRef.current.currentTime);
+    dispatch(setProgress(progress));
   };
 
-  const handleEnded = () => {
-    if (repeat) {
-      audioRef.current.play();
-    } else {
-      handleNextTrack();
-    }
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleProgressChange = (newValue) => {
+    const time = (newValue[0] / 100) * duration;
+    audioRef.current.currentTime = time;
+    setCurrentTime(time);
+  };
+
+  const getVolumeIcon = () => {
+    if (volume === 0) return <VolumeX size={20} />;
+    if (volume < 50) return <Volume1 size={20} />;
+    return <Volume2 size={20} />;
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#181818] text-white p-4">
-      <audio
-        ref={audioRef}
-        src={currentTrack?.preview_url}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={handleEnded}
-      />
-      <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {currentTrack && (
-            <>
-              <img src={currentTrack.album.images[0].url} alt={currentTrack.name} className="w-14 h-14" />
-              <div>
-                <p className="font-semibold">{currentTrack.name}</p>
-                <p className="text-sm text-gray-400">{currentTrack.artists.map(a => a.name).join(', ')}</p>
+    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-zinc-900 to-zinc-800 border-t border-zinc-700">
+      <div className="max-w-screen-xl mx-auto px-4 py-3">
+        <audio
+          ref={audioRef}
+          onEnded={handleNextTrack}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={() => setDuration(audioRef.current.duration)}
+        />
+        {currentTrack && (
+          <div className="flex items-center justify-between gap-4">
+            {/* Track Info */}
+            <div className="flex items-center min-w-[180px] max-w-[300px]">
+              <div className="relative w-14 h-14 rounded-md overflow-hidden">
+                <img 
+                  src={currentTrack.album.images[0].url} 
+                  alt={currentTrack.name}
+                  className="object-cover w-full h-full"
+                />
               </div>
-            </>
-          )}
-        </div>
+              <div className="ml-3 overflow-hidden">
+                <p className="text-white font-medium truncate">{currentTrack.name}</p>
+                <p className="text-zinc-400 text-sm truncate">
+                  {currentTrack.artists.map(artist => artist.name).join(', ')}
+                </p>
+              </div>
+            </div>
 
-        <div className="flex flex-col items-center space-y-2">
-          <div className="flex items-center space-x-4">
-            <button onClick={handleShuffleToggle} className={`hover:text-white ${shuffle ? 'text-[#1ed760]' : 'text-gray-400'}`}>
-              <Shuffle size={20} />
-            </button>
-            <button onClick={handlePrevTrack} className="text-gray-400 hover:text-white">
-              <SkipBack size={20} />
-            </button>
-            <button onClick={handlePlayPause} className="bg-white text-black rounded-full p-2 hover:scale-105">
-              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-            </button>
-            <button onClick={handleNextTrack} className="text-gray-400 hover:text-white">
-              <SkipForward size={20} />
-            </button>
-            <button onClick={handleRepeatToggle} className={`hover:text-white ${repeat ? 'text-[#1ed760]' : 'text-gray-400'}`}>
-              <Repeat size={20} />
-            </button>
-          </div>
-          <div className="w-full bg-gray-600 rounded-full h-1">
-            <div className="bg-white h-1 rounded-full" style={{ width: `${progress}%` }}></div>
-          </div>
-        </div>
+            {/* Playback Controls */}
+            <div className="flex-1 max-w-2xl">
+              <div className="flex items-center justify-center gap-6 mb-2">
+                <button 
+                  onClick={handlePreviousTrack}
+                  className="text-zinc-400 hover:text-white transition"
+                >
+                  <SkipBack size={24} />
+                </button>
+                <button 
+                  onClick={handlePlayPause}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition"
+                >
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+                <button 
+                  onClick={handleNextTrack}
+                  className="text-zinc-400 hover:text-white transition"
+                >
+                  <SkipForward size={24} />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-400 w-10 text-right">
+                  {formatTime(currentTime)}
+                </span>
+                {/* <Slider
+                  value={[currentTime ? (currentTime / duration) * 100 : 0]}
+                  onValueChange={handleProgressChange}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                /> */}
+                <span className="text-xs text-zinc-400 w-10">
+                  {formatTime(duration)}
+                </span>
+              </div>
+            </div>
 
-        <div className="flex items-center space-x-2">
-          <Volume2 size={20} />
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-24 accent-[#1ed760]"
-          />
-        </div>
+            {/* Volume Control */}
+            <div className="flex items-center gap-2 min-w-[150px]">
+              <button className="text-zinc-400 hover:text-white transition">
+                {getVolumeIcon()}
+              </button>
+              {/* <Slider
+                value={[volume]}
+                onValueChange={(newValue) => setVolume(newValue[0])}
+                max={100}
+                step={1}
+                className="w-24"
+              /> */}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default MusicControlPanel;

@@ -177,6 +177,7 @@ export const playTrack = createAsyncThunk(
   async (track, { dispatch, getState }) => {
     const { accessToken } = getState().spotify;
     try {
+      // Spotify API orqali qo'shiqni ijro etish
       await axios.put(
         `https://api.spotify.com/v1/me/player/play`,
         { uris: [track.uri] },
@@ -187,11 +188,18 @@ export const playTrack = createAsyncThunk(
           },
         }
       );
+      
+      // Lokal ijro uchun
       dispatch(setCurrentTrack(track));
       dispatch(setIsPlaying(true));
+      
+      return track;
     } catch (error) {
       console.error('Qo\'shiqni ijro etishda xatolik:', error);
-      throw error;
+      // Agar Spotify API xato bersa, faqat lokal ijroni boshlash
+      dispatch(setCurrentTrack(track));
+      dispatch(setIsPlaying(true));
+      return track;
     }
   }
 );
@@ -265,6 +273,9 @@ const spotifySlice = createSlice({
     },
     resetCurrentPlaylist: (state) => {
       state.currentPlaylist = null;
+    },
+    setAudioSrc: (state, action) => {
+      state.audioSrc = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -356,6 +367,7 @@ export const {
   toggleShuffle,
   setPlaylist,
   resetCurrentPlaylist,
+  setAudioSrc,
 } = spotifySlice.actions;
 
 export default spotifySlice.reducer;

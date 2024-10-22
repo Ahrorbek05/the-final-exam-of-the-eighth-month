@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Pause, Heart, Clock, MoreHorizontal, Loader2 } from 'lucide-react';
-import { fetchPlaylist, setCurrentTrack, setIsPlaying, toggleLike, setPlaylist, resetCurrentPlaylist } from '../features/spotifySlice';
+import { fetchPlaylist, setCurrentTrack, setIsPlaying, toggleLike, setPlaylist, resetCurrentPlaylist, playTrack } from '../features/spotifySlice';
 import MusicControlPanel from '../components/MusicControlPanel';
 
 export default function PlaylistView() {
@@ -48,6 +48,14 @@ export default function PlaylistView() {
   const tracks = currentPlaylist.tracks.items || [];
   const totalDuration = tracks.reduce((acc, item) => acc + (item.track?.duration_ms || 0), 0);
   console.log(currentPlaylist.tracks);
+
+  const handlePlayPause = (track) => {
+    if (currentTrack?.id === track.id) {
+      dispatch(setIsPlaying(!isPlaying));
+    } else {
+      dispatch(playTrack(track));
+    }
+  };
 
   return (
     <div className="bg-gradient-to-b from-[#535353] to-[#121212] min-h-screen text-white p-8 pb-24">
